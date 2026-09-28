@@ -15,8 +15,6 @@
 import asyncio
 import os
 from pathlib import Path
-from urllib.parse import urlparse
-
 import httpx
 from loguru import logger
 
