@@ -27,6 +27,7 @@ from api.schemas.video import (
     VideoGenerateAsyncResponse,
 )
 from api.tasks import task_manager, TaskType
+from api.openrouter_video import generate_video as generate_openrouter_video
 
 router = APIRouter(prefix="/video", tags=["Video Generation"])
 
@@ -200,6 +201,45 @@ async def generate_video_async(
     """
     try:
         logger.info(f"Async video generation: {request_body.text[:50]}...")
+
+        # Prefer the hosted OpenRouter backend when its secret is configured.
+        if os.getenv("OPENROUTER_API_KEY"):
+            task = task_manager.create_task(
+                task_type=TaskType.VIDEO_GENERATION,
+                request_params=request_body.model_dump()
+            )
+
+            async def execute_openrouter_generation():
+                aspect_ratio = "16:9"
+                if request_body.frame_template and "1080x1920" in request_body.frame_template:
+                    aspect_ratio = "9:16"
+                elif request_body.frame_template and "1080x1080" in request_body.frame_template:
+                    aspect_ratio = "1:1"
+
+                result = await generate_openrouter_video(
+                    request_body.text,
+                    model=os.getenv("OPENROUTER_VIDEO_MODEL"),
+                    duration=5,
+                    aspect_ratio=aspect_ratio,
+                    resolution=os.getenv("OPENROUTER_VIDEO_RESOLUTION", "720p"),
+                    generate_audio=False,
+                )
+                return {
+                    "video_url": path_to_url(request, result["video_path"]),
+                    "duration": result["duration"],
+                    "file_size": result["file_size"],
+                    "provider": result["provider"],
+                    "model": result["model"],
+                    "job_id": result["job_id"],
+                    "usage": result.get("usage"),
+                }
+
+            await task_manager.execute_task(
+                task_id=task.task_id,
+                coro_func=execute_openrouter_generation
+            )
+
+            return VideoGenerateAsyncResponse(task_id=task.task_id)
         
         # Create task
         task = task_manager.create_task(
