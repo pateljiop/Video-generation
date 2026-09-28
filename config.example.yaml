@@ -74,6 +74,15 @@ comfyui:
     # Video prompt prefix (optional)
     prompt_prefix: "Minimalist black-and-white matchstick figure style illustration, clean lines, simple sketch style"
 
+# ==================== OpenRouter Hosted Video ====================
+# Optional hosted video backend. When OPENROUTER_API_KEY is present,
+# the API async video endpoint uses OpenRouter instead of local workflows.
+# Free starting model: kwaivgi/kling-v3.0-pro:free (rate limited).
+# Set these in the deployment environment; never commit the API key.
+# OPENROUTER_API_KEY: ""
+# OPENROUTER_VIDEO_MODEL: "kwaivgi/kling-v3.0-pro:free"
+# OPENROUTER_VIDEO_RESOLUTION: "720p"
+
 # ==================== Template Configuration ====================
 # Configure default template for video generation
 template:
