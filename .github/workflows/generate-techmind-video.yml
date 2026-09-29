@@ -50,7 +50,7 @@ jobs:
           payload=$(python - <<'PY'
           import json, os
           print(json.dumps({
-              "text": "AI Agents ab sirf chat nahi karte.\n\nYe agents computer par apps khol sakte hain, web browse kar sakte hain, code likh sakte hain aur tasks execute kar sakte hain.\n\nTechMind: AI jo aapke computer ke saath kaam karta hai.",
+              "text": os.environ["PROMPT"],
               "mode": "fixed",
               "n_scenes": 1,
               "title": "TechMind Central",
