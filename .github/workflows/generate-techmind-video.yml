@@ -29,7 +29,7 @@ jobs:
         id: start
         env:
           RENDER_URL: https://pixelle-video-31d7.onrender.com
-          PROMPT: ${{ inputs.prompt }}
+          PROMPT: ${{ inputs.prompt || 'AI Agents अब सिर्फ Chat नहीं करते — आपका Computer भी चला सकते हैं. Show a modern desktop AI agent controlling a computer, opening apps, browsing the web, writing code, and executing tasks, with a cinematic dark-tech visual style.' }}
         run: |
           set -e
           payload=$(python - <<'PY'
