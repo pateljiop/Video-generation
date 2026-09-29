@@ -3,8 +3,8 @@ from mathutils import Vector
 from pathlib import Path
 import math
 
-W, H, FPS = 540, 960, 24
-D = 18.6
+W, H, FPS = 360, 640, 20
+D = 15.0
 OUT = Path("build")
 OUT.mkdir(exist_ok=True)
 MP4 = OUT / "techmind-cinematic.mp4"
@@ -39,7 +39,7 @@ def cube(name, loc, scale, material, bevel=.03):
     if bevel:
         mod = o.modifiers.new("Bevel", "BEVEL")
         mod.width = bevel
-        mod.segments = 2
+        mod.segments = 1
     o.data.materials.append(material)
     return o
 
@@ -110,9 +110,9 @@ cube("Monitor", (0, 0, 2.0), (2.35, .14, 1.35), BLACK, .10)
 display = cube("Display", (0, -.16, 2.0), (2.08, .035, 1.08), SCREEN, .03)
 cube("Base", (0, -1.05, .48), (2.5, .78, .08), BLACK, .08)
 
-for r in range(5):
-    for c in range(12):
-        cube(f"Key_{r}_{c}", (-1.8 + c*.33, -1.27 + r*.27, .59), (.115, .07, .018), WHITE, .008)
+for r in range(4):
+    for c in range(9):
+        cube(f"Key_{r}_{c}", (-1.35 + c*.34, -1.10 + r*.27, .59), (.115, .07, .018), WHITE, .008)
 
 area_light((-3.5, -3.5, 4.5), 900, (.03, .22, 1), 3.2)
 area_light((3.2, 1.5, 3.5), 700, (.02, .65, 1), 2.5)
@@ -157,7 +157,7 @@ shots = [
     (6.2, 9.3, (-3.4,-7.7,2.5), (1.5,-6.0,2.0)),
     (9.3, 12.4, (3.7,-7.5,3.3), (-.7,-5.9,2.05)),
     (12.4, 15.5, (-3.5,-7.2,2.8), (1.9,-6.0,2.0)),
-    (15.5, 18.6, (2.9,-8.0,3.8), (0,-6.0,1.7)),
+    (12.5, 15.0, (2.9,-8.0,3.8), (0,-6.0,1.7)),
 ]
 for start, end, p0, target0 in shots:
     C.location = p0
@@ -184,11 +184,11 @@ for t, label, material in [
 
 # Ending brand reveal.
 brand = text("TECHMIND", (0, -.46, .95), .56, CYAN, "CENTER")
-key(brand, int(15.7*FPS), scale=(.01,.01,.01))
-key(brand, int(16.2*FPS), scale=(1,1,1))
+key(brand, int(13.0*FPS), scale=(.01,.01,.01))
+key(brand, int(13.5*FPS), scale=(1,1,1))
 tag = text("AI  +  COMPUTER  +  ACTION", (0, -.46, .48), .17, WHITE, "CENTER")
-key(tag, int(16.1*FPS), scale=(.01,.01,.01))
-key(tag, int(16.6*FPS), scale=(1,1,1))
+key(tag, int(13.4*FPS), scale=(.01,.01,.01))
+key(tag, int(14.0*FPS), scale=(1,1,1))
 
 # Render to MP4.
 sc.render.image_settings.file_format = "FFMPEG"
