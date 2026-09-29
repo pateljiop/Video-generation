@@ -2,6 +2,8 @@ name: Generate TechMind Video
 # Native/free pipeline verification run
 
 on:
+  schedule:
+    - cron: '30 4 * * *'
   push:
     branches:
       - main
