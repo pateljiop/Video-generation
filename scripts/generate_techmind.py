@@ -102,7 +102,7 @@ def main():
     run(["python","-m","pip","install","--quiet","edge-tts"])
     run(["edge-tts","--voice","hi-IN-MadhurNeural","--rate","+5%","--text",text,"--write-media",str(OUT/"voice.mp3")])
     audio_duration = float(subprocess.check_output(["ffprobe","-v","error","-show_entries","format=duration","-of","csv=p=0",str(OUT/"voice.mp3")], text=True).strip())
-    scene_duration = audio_duration / len(SCENES) + 0.03
+    scene_duration = audio_duration / len(SCENES)
     print(f"TTS duration={audio_duration:.2f}s; scene duration={scene_duration:.2f}s")
     clips = [make_scene(i, *scene, scene_duration) for i, scene in enumerate(SCENES)]
     concat = OUT/"concat.txt"
