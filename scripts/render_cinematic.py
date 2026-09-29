@@ -30,7 +30,7 @@ def aim(c,target):
     c.rotation_euler=(Vector(target)-c.location).to_track_quat('-Z','Y').to_euler()
 
 bpy.ops.object.select_all(action='SELECT'); bpy.ops.object.delete(use_global=False)
-sc=bpy.context.scene; sc.render.engine='BLENDER_EEVEE_NEXT'; sc.render.resolution_x=W; sc.render.resolution_y=H; sc.render.resolution_percentage=100; sc.render.fps=FPS
+sc=bpy.context.scene; sc.render.engine='BLENDER_EEVEE'; sc.render.resolution_x=W; sc.render.resolution_y=H; sc.render.resolution_percentage=100; sc.render.fps=FPS
 sc.world.color=(.002,.004,.009); sc.view_settings.look='AgX - Medium High Contrast'
 cube("desk",(0,0,0),(5,4,.12),DARK,.06)
 light((-3,-3,4),800,(.04,.3,1),3); light((3,1,3),650,(.02,.7,1),2)
