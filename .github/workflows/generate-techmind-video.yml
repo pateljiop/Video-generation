@@ -9,6 +9,7 @@ on:
       - '.github/workflows/generate-techmind-video.yml'
       - 'scripts/generate_techmind.py'
       - 'scripts/render_cinematic.py'
+      - 'scripts/render_microshots.py'
   workflow_dispatch:
 
 permissions:
@@ -34,7 +35,7 @@ jobs:
         run: |
           set -e
           mkdir -p build
-          xvfb-run -a blender -b --python scripts/render_cinematic.py
+          xvfb-run -a blender -b --python scripts/render_microshots.py
           test -s build/techmind-cinematic.mp4
           python -m pip install --quiet edge-tts
           edge-tts --voice hi-IN-MadhurNeural --rate +8% --text "AI agents ab sirf chat nahi karte. Ye computer par apps khol sakte hain, web browse kar sakte hain, code likh sakte hain, aur task complete hone tak khud verify bhi kar sakte hain. TechMind — AI jo aapke computer ke saath kaam karta hai." --write-media build/voice.mp3
