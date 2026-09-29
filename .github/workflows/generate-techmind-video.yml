@@ -1,4 +1,5 @@
 name: Generate TechMind Video
+# Native/free pipeline verification run
 
 on:
   push:
