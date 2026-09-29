@@ -37,58 +37,37 @@ def run(cmd: list[str]) -> None:
 
 
 def make_cinematic_source_image() -> Path:
-    """Create a clean source frame for the free Wan I2V hero shot."""
-    from PIL import Image, ImageDraw, ImageFilter
-
+    """Create a clean cinematic source frame using FFmpeg only (no Pillow dependency)."""
     p = OUT / "hero_source.png"
-    img = Image.new("RGB", (832, 480), (5, 9, 18))
-    px = img.load()
-    for y in range(img.height):
-        for x in range(img.width):
-            glow = max(0, 1 - (((x - 430) / 520) ** 2 + ((y - 235) / 360) ** 2))
-            px[x, y] = (
-                int(5 + 8 * glow),
-                int(9 + 18 * glow),
-                int(18 + 35 * glow),
-            )
-
-    d = ImageDraw.Draw(img, "RGBA")
-    # Desk and ambient light.
-    d.rectangle((0, 350, 832, 480), fill=(8, 12, 20, 255))
-    d.rectangle((0, 342, 832, 358), fill=(25, 40, 55, 255))
-    d.ellipse((560, 330, 820, 510), fill=(20, 110, 180, 45))
-
-    # Laptop body/screen, deliberately simple so Wan supplies the realism and motion.
-    d.rounded_rectangle((245, 95, 625, 335), 18, fill=(14, 20, 31, 255), outline=(80, 105, 130, 190), width=3)
-    d.rounded_rectangle((265, 115, 605, 300), 10, fill=(4, 13, 25, 255))
-    d.rectangle((285, 135, 585, 280), fill=(7, 22, 38, 255))
-    for i, w in enumerate((220, 185, 250, 145, 205)):
-        y = 155 + i * 22
-        d.rounded_rectangle((300, y, 300 + w, y + 7), 3, fill=(70, 190, 235, 165))
-    d.rounded_rectangle((220, 332, 650, 365), 8, fill=(24, 30, 40, 255))
-    d.polygon([(220, 365), (650, 365), (710, 405), (160, 405)], fill=(18, 24, 33, 255))
-    d.rounded_rectangle((385, 375, 475, 392), 5, fill=(65, 78, 92, 170))
-
-    # Abstract hands/foreground silhouette.
-    d.ellipse((115, 355, 255, 470), fill=(35, 43, 53, 220))
-    d.ellipse((590, 360, 760, 485), fill=(35, 43, 53, 220))
-
-    # Cinematic practical lights and subtle particles.
-    for cx, cy, r in [(110, 95, 45), (740, 110, 55), (680, 300, 28)]:
-        d.ellipse((cx-r, cy-r, cx+r, cy+r), fill=(50, 180, 255, 25))
-    for x, y in [(92, 260), (720, 240), (770, 185), (180, 160), (650, 85)]:
-        d.ellipse((x, y, x+3, y+3), fill=(120, 220, 255, 130))
-
-    img = img.filter(ImageFilter.GaussianBlur(radius=0.25))
-    img.save(p)
+    vf = (
+        "drawbox=x=0:y=0:w=832:h=480:color=0x050912:t=fill,"
+        "drawbox=x=0:y=350:w=832:h=130:color=0x080c14:t=fill,"
+        "drawbox=x=245:y=95:w=380:h=240:color=0x0e141f:t=fill,"
+        "drawbox=x=265:y=115:w=340:h=185:color=0x071625:t=fill,"
+        "drawbox=x=285:y=135:w=300:h=145:color=0x071e32:t=fill,"
+        "drawbox=x=300:y=155:w=220:h=7:color=0x46b9e8@0.65:t=fill,"
+        "drawbox=x=300:y=177:w=185:h=7:color=0x46b9e8@0.50:t=fill,"
+        "drawbox=x=300:y=199:w=250:h=7:color=0x46b9e8@0.58:t=fill,"
+        "drawbox=x=300:y=221:w=145:h=7:color=0x46b9e8@0.42:t=fill,"
+        "drawbox=x=300:y=243:w=205:h=7:color=0x46b9e8@0.52:t=fill,"
+        "drawbox=x=220:y=332:w=430:h=33:color=0x18202a:t=fill,"
+        "drawbox=x=160:y=365:w=550:h=40:color=0x121923:t=fill,"
+        "drawbox=x=385:y=374:w=90:h=15:color=0x415064@0.7:t=fill,"
+        "drawbox=x=90:y=250:w=8:h=8:color=0x7dd3fc@0.8:t=fill,"
+        "drawbox=x=730:y=190:w=7:h=7:color=0x7dd3fc@0.7:t=fill,"
+        "drawbox=x=680:y=290:w=6:h=6:color=0x7dd3fc@0.65:t=fill"
+    )
+    run([
+        "ffmpeg", "-y", "-f", "lavfi", "-i", "color=c=0x050912:s=832x480:r=1",
+        "-vf", vf, "-frames:v", "1", str(p)
+    ])
     return p
-
 
 def generate_free_wan_hero() -> Path | None:
     """Try one free Hugging Face ZeroGPU Wan 2.2 I2V hero shot; return None on any quota/queue/API failure."""
     hero = OUT / "wan_hero.mp4"
     try:
-        run(["python", "-m", "pip", "install", "--quiet", "gradio_client", "pillow"])
+        run(["python", "-m", "pip", "install", "--quiet", "gradio_client"])
         source = make_cinematic_source_image()
         from gradio_client import Client, handle_file
 
@@ -403,7 +382,7 @@ def make_scene(i: int, scene: tuple[str, str, str, str, str], dur: float) -> Pat
 def main() -> None:
     global HERO
     # Install all optional free dependencies before creating the source frame.
-    run(["python", "-m", "pip", "install", "--quiet", "edge-tts", "gradio_client", "pillow"])
+    run(["python", "-m", "pip", "install", "--quiet", "edge-tts", "gradio_client"])
     # One short free AI-video hero shot; all remaining scenes stay local/free.
     HERO = generate_free_wan_hero()
     run([
