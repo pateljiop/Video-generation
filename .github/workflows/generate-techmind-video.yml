@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - '.github/workflows/generate-techmind-video.yml'
+      - 'api/openrouter_video.py'
   workflow_dispatch:
     inputs:
       prompt:
