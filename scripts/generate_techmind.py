@@ -4,9 +4,11 @@ No paid video/image API is used. Visuals are original motion-graphics, not copie
 """
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
+import urllib.parse
 from pathlib import Path
 
 OUT = Path("build")
@@ -64,54 +66,77 @@ def make_cinematic_source_image() -> Path:
     return p
 
 def generate_free_wan_hero() -> Path | None:
-    """Try one free Hugging Face ZeroGPU Wan 2.2 I2V hero shot; return None on any quota/queue/API failure."""
+    """Call the public Hugging Face Wan ZeroGPU Space through Gradio's HTTP API."""
     hero = OUT / "wan_hero.mp4"
+    base = "https://zerogpu-aoti-wan2-2-fp8da-aoti-faster.hf.space"
     try:
-        install = subprocess.run([
-            "python", "-m", "pip", "install", "--disable-pip-version-check", "--no-input", "gradio-client==2.7.1"
-        ], text=True)
-        if install.returncode != 0:
-            print(f"WAN_CLIENT_INSTALL_FAILED={install.returncode}")
-            return None
-        check = subprocess.run(["python", "-c", "import gradio_client; print(gradio_client.__version__)"], text=True)
-        if check.returncode != 0:
-            print(f"WAN_CLIENT_IMPORT_FAILED={check.returncode}")
-            return None
         source = make_cinematic_source_image()
-        from gradio_client import Client, handle_file
+        token = os.getenv("HF_TOKEN") or ""
+        auth = ["-H", f"Authorization: Bearer {token}"] if token else []
 
-        token = os.getenv("HF_TOKEN") or None
-        client = Client(
-            "zerogpu-aoti/wan2-2-fp8da-aoti-faster",
-            token=token,
-            verbose=True,
+        upload = subprocess.check_output(
+            ["curl", "-sS", "-X", "POST", *auth, "-F", f"files=@{source}",
+             f"{base}/gradio_api/upload"],
+            text=True,
         )
-        print("Attempting free Hugging Face ZeroGPU Wan 2.2 hero generation...")
-        result = client.predict(
-            input_image=handle_file(str(source)),
-            prompt=(
-                "Cinematic live-action close-up of a futuristic computer workstation at night, "
-                "a powerful AI agent operating a laptop, screen glow reflecting across the desk, "
-                "subtle hand movement, cursor activity, shallow depth of field, realistic glass "
-                "and metal, blue and cyan practical lighting, smooth slow camera push-in, "
-                "premium technology commercial, photorealistic, natural motion, no text, no logos."
-            ),
-            negative_prompt=(
-                "static image, frozen frame, cartoon, illustration, anime, low quality, blurry, "
-                "warped laptop, distorted hands, extra fingers, text, subtitles, watermark, logo"
-            ),
-            duration_seconds=3.0,
-            guidance_scale=1.0,
-            guidance_scale_2=1.0,
-            steps=4,
-            seed=42,
-            randomize_seed=True,
-            api_name="/generate_video",
+        uploaded = json.loads(upload)
+        if not uploaded or not uploaded[0]:
+            raise RuntimeError(f"Upload returned no file path: {upload[:500]}")
+        remote_path = uploaded[0]
+
+        payload = {
+            "data": [
+                {"path": remote_path, "meta": {"_type": "gradio.FileData"}, "orig_name": source.name},
+                (
+                    "Cinematic live-action close-up of a futuristic computer workstation at night, "
+                    "a powerful AI agent operating a laptop, screen glow reflecting across the desk, "
+                    "subtle hand movement, cursor activity, shallow depth of field, realistic glass "
+                    "and metal, blue and cyan practical lighting, smooth slow camera push-in, "
+                    "premium technology commercial, photorealistic, natural motion, no text, no logos."
+                ),
+                (
+                    "static image, frozen frame, cartoon, illustration, anime, low quality, blurry, "
+                    "warped laptop, distorted hands, extra fingers, text, subtitles, watermark, logo"
+                ),
+                3.0, 1.0, 1.0, 4, 42, True,
+            ]
+        }
+
+        started = subprocess.check_output(
+            ["curl", "-sS", "-X", "POST", *auth,
+             "-H", "Content-Type: application/json",
+             "--data", json.dumps(payload),
+             f"{base}/gradio_api/call/generate_video"],
+            text=True,
         )
-        video_path = result[0] if isinstance(result, (tuple, list)) else result
-        if not video_path:
-            raise RuntimeError(f"Space returned no video: {result!r}")
-        shutil.copyfile(str(video_path), hero)
+        event_id = json.loads(started).get("event_id")
+        if not event_id:
+            raise RuntimeError(f"No event_id returned: {started[:500]}")
+        print(f"WAN_EVENT_ID={event_id}")
+
+        stream = subprocess.check_output(
+            ["curl", "-sS", "-N", *auth, f"{base}/gradio_api/call/generate_video/{event_id}"],
+            text=True,
+        )
+        complete = stream.rsplit("event: complete", 1)[-1]
+        data_line = next((ln for ln in complete.splitlines() if ln.startswith("data: ")), None)
+        if not data_line:
+            raise RuntimeError(f"Wan queue did not complete: {stream[-1000:]}")
+        outputs = json.loads(data_line[6:])
+        video_obj = outputs[0] if outputs else None
+        if not isinstance(video_obj, dict):
+            raise RuntimeError(f"Unexpected video result: {outputs!r}")
+
+        remote_video = video_obj.get("path")
+        video_url = video_obj.get("url")
+        if video_url and video_url.startswith("http"):
+            download_url = video_url
+        elif remote_video:
+            download_url = f"{base}/gradio_api/file={urllib.parse.quote(remote_video, safe='/')}"
+        else:
+            raise RuntimeError(f"No video path/url in result: {video_obj!r}")
+
+        subprocess.run(["curl", "-sS", "-L", *auth, "-o", str(hero), download_url], check=True)
         duration = float(subprocess.check_output([
             "ffprobe", "-v", "error", "-show_entries", "format=duration",
             "-of", "csv=p=0", str(hero)
@@ -123,7 +148,6 @@ def generate_free_wan_hero() -> Path | None:
     except Exception as exc:
         print(f"WAN_ZERO_GPU_FALLBACK={type(exc).__name__}: {exc}")
         return None
-
 
 def make_hero_scene(dur: float) -> Path:
     out = OUT / "scene_0.mp4"
@@ -391,7 +415,7 @@ def make_scene(i: int, scene: tuple[str, str, str, str, str], dur: float) -> Pat
 def main() -> None:
     global HERO
     # Install all optional free dependencies before creating the source frame.
-    run(["python", "-m", "pip", "install", "--quiet", "edge-tts", "gradio_client"])
+    run(["python", "-m", "pip", "install", "--quiet", "edge-tts"])
     # One short free AI-video hero shot; all remaining scenes stay local/free.
     HERO = generate_free_wan_hero()
     run([
