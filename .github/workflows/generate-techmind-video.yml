@@ -2,9 +2,6 @@ name: Generate TechMind Video
 # Native/free pipeline verification run
 
 on:
-  schedule:
-    # Daily at 10:00 IST (04:30 UTC)
-    - cron: '30 4 * * *'
   push:
     branches:
       - main
