@@ -31,6 +31,39 @@ from api.openrouter_video import generate_video as generate_openrouter_video
 
 router = APIRouter(prefix="/video", tags=["Video Generation"])
 
+@router.get("/openrouter/models")
+async def openrouter_video_models():
+    """Return the currently available OpenRouter video models without exposing the API key."""
+    import httpx
+
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=503, detail="OPENROUTER_API_KEY is not configured")
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                "https://openrouter.ai/api/v1/videos/models",
+                headers={"Authorization": f"Bearer {api_key}"},
+            )
+            response.raise_for_status()
+            data = response.json()
+        return {
+            "data": [
+                {
+                    "id": item.get("id"),
+                    "pricing": item.get("pricing"),
+                    "supported_parameters": item.get("supported_parameters"),
+                    "supported": item.get("supported"),
+                }
+                for item in data.get("data", [])
+            ]
+        }
+    except Exception as e:
+        logger.error(f"OpenRouter video model lookup error: {e}")
+        raise HTTPException(status_code=502, detail=str(e))
+
+
 
 def path_to_url(request: Request, file_path: str) -> str:
     """
