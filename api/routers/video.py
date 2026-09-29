@@ -17,6 +17,10 @@ Supports both synchronous and asynchronous video generation.
 """
 
 import os
+import asyncio
+import subprocess
+from pathlib import Path
+from uuid import uuid4
 from fastapi import APIRouter, HTTPException, Request
 from loguru import logger
 
@@ -30,6 +34,67 @@ from api.tasks import task_manager, TaskType
 from api.openrouter_video import generate_video as generate_openrouter_video
 
 router = APIRouter(prefix="/video", tags=["Video Generation"])
+
+
+async def generate_free_motion_video(text: str, title: str | None = None, fps: int = 30) -> dict:
+    """Create a genuinely free TechMind-style MP4 using Edge TTS + FFmpeg only.
+
+    No paid video/image API, ComfyUI, RunningHub, or browser rendering is used.
+    """
+    import edge_tts
+
+    task_id = uuid4().hex[:12]
+    out_dir = Path("output") / f"free_{task_id}"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    audio_path = out_dir / "voice.mp3"
+    text_path = out_dir / "body.txt"
+    video_path = out_dir / "techmind.mp4"
+
+    script = text.strip()
+    if not script:
+        script = "AI agents do more than chat. They can control apps, browse the web, write code, and execute tasks."
+
+    # Edge TTS is used as the free narration layer.
+    communicate = edge_tts.Communicate(script, voice="en-US-AriaNeural", rate="+8%")
+    await communicate.save(str(audio_path))
+
+    body = (script.replace("\\r", "").replace("\\n", " \\n").strip())[:900]
+    text_path.write_text(body, encoding="utf-8")
+    title_text = (title or "TECHMIND").upper().replace(":", " - ")[:60]
+
+    filter_graph = (
+        "drawgrid=w=120:h=120:t=1:c=0x2b3954@0.22,"
+        f"drawtext=fontcolor=0x67e8f9:fontsize=78:x=(w-text_w)/2:y=220:"
+        f"text='{title_text}',shadowcolor=black@0.7:shadowx=3:shadowy=3,"
+        f"drawtext=fontcolor=white:fontsize=44:line_spacing=18:x=90:y=620:"
+        f"textfile='{text_path}',box=1:boxcolor=0x0b1220@0.82:boxborderw=38"
+    )
+
+    cmd = [
+        "ffmpeg", "-y",
+        "-f", "lavfi", "-i", f"color=c=0x050914:s=1080x1920:r={fps}",
+        "-i", str(audio_path),
+        "-vf", filter_graph,
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+        "-pix_fmt", "yuv420p",
+        "-c:a", "aac", "-b:a", "128k",
+        "-shortest", str(video_path),
+    ]
+
+    proc = await asyncio.to_thread(subprocess.run, cmd, capture_output=True, text=True, timeout=180)
+    if proc.returncode != 0 or not video_path.exists() or video_path.stat().st_size == 0:
+        raise RuntimeError(f"Free FFmpeg video generation failed: {proc.stderr[-2000:]}")
+
+    probe = await asyncio.to_thread(subprocess.run, [
+        "ffprobe", "-v", "error", "-show_entries", "format=duration",
+        "-of", "default=noprint_wrappers=1:nokey=1", str(video_path)
+    ], capture_output=True, text=True, timeout=30)
+    try:
+        duration = float(probe.stdout.strip())
+    except Exception:
+        duration = 0.0
+
+    return {"video_path": str(video_path), "duration": duration, "file_size": video_path.stat().st_size}
 
 @router.get("/openrouter/models")
 async def openrouter_video_models():
@@ -279,7 +344,27 @@ async def generate_video_async(
             task_type=TaskType.VIDEO_GENERATION,
             request_params=request_body.model_dump()
         )
-        
+
+        # In free mode, bypass the heavyweight browser/ComfyUI pipeline entirely.
+        # This guarantees that no paid video/image provider is called.
+        if not use_openrouter:
+            async def execute_free_generation():
+                result = await generate_free_motion_video(
+                    request_body.text,
+                    title=request_body.title or "TechMind",
+                    fps=request_body.video_fps,
+                )
+                return {
+                    "video_url": path_to_url(request, result["video_path"]),
+                    "duration": result["duration"],
+                    "file_size": result["file_size"],
+                    "provider": "free-local-ffmpeg-edge-tts",
+                    "model": "none",
+                }
+
+            await task_manager.execute_task(task_id=task.task_id, coro_func=execute_free_generation)
+            return VideoGenerateAsyncResponse(task_id=task.task_id)
+
         # Define async execution function
         async def execute_video_generation():
             """Execute video generation in background"""
