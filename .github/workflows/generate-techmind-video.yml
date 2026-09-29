@@ -94,7 +94,7 @@ jobs:
       - name: Download MP4
         env:
           VIDEO_URL: ${{ steps.wait.outputs.video_url }}
-          FILENAME: ${{ inputs.filename }}
+          FILENAME: ${{ inputs.filename || 'techmind-ai-agents-computer.mp4' }}
         run: |
           set -e
           curl -fL --retry 5 --retry-delay 5 "$VIDEO_URL" -o "$FILENAME"
@@ -105,6 +105,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: techmind-central-video
-          path: ${{ inputs.filename }}
+          path: ${{ inputs.filename || 'techmind-ai-agents-computer.mp4' }}
           if-no-files-found: error
           retention-days: 30
