@@ -68,15 +68,15 @@ async def generate_free_motion_video(text: str, title: str | None = None, fps: i
 
     filter_graph = (
         "drawgrid=w=120:h=120:t=1:c=0x2b3954@0.22,"
-        f"drawtext=fontcolor=0x67e8f9:fontsize=78:x=(w-text_w)/2:y=220:"
+        f"drawtext=fontcolor=0x67e8f9:fontsize=34:x=(w-text_w)/2:y=80:"
         f"textfile='{title_file}':shadowcolor=0x000000@0.7:shadowx=3:shadowy=3,"
-        f"drawtext=fontcolor=white:fontsize=44:line_spacing=18:x=90:y=620:"
-        f"textfile='{text_file}':box=1:boxcolor=0x0b1220@0.82:boxborderw=38"
+        f"drawtext=fontcolor=white:fontsize=18:line_spacing=8:x=25:y=220:"
+        f"textfile='{text_file}':box=1:boxcolor=0x0b1220@0.82:boxborderw=16"
     )
 
     cmd = [
         "ffmpeg", "-y",
-        "-f", "lavfi", "-i", f"color=c=0x050914:s=720x1280:r={min(fps,24)}",
+        "-f", "lavfi", "-i", f"color=c=0x050914:s=360x640:r={min(fps,15)}",
         "-i", str(audio_path),
         "-vf", filter_graph,
         "-c:v", "libx264", "-preset", "ultrafast", "-crf", "28",
