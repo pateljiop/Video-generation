@@ -71,7 +71,8 @@ def cam(loc, target, lens=50):
     bpy.ops.object.camera_add(location=loc)
     c = bpy.context.object
     c.data.lens = lens
-    c.data.sensor_width = 36
+    c.data.sensor_width = 32
+    c.data.dof.use_dof = False
     c.rotation_euler = (Vector(target) - c.location).to_track_quat("-Z", "Y").to_euler()
     c.data.dof.use_dof = True
     return c
@@ -148,11 +149,11 @@ def shot1():
                    (.045, .045, .045), CYAN, .012)
         orb.rotation_euler[1] = a
     glow_strip((0, -.72, .20), (1.6, .025, .018), MAG)
-    c = cam((-4.2, -7.4, 3.35), (0, 0, 1.75), 52)
+    c = cam((-0.55, -10.5, 2.65), (0, 0, 2.15), 48)
     bpy.context.scene.camera = c
     c.keyframe_insert("location", frame=1)
-    c.location = (-1.2, -5.0, 2.25)
-    c.rotation_euler = (Vector((0, 0, 1.75)) - c.location).to_track_quat("-Z", "Y").to_euler()
+    c.location = (0.55, -9.2, 2.55)
+    c.rotation_euler = (Vector((0, 0, 2.15)) - c.location).to_track_quat("-Z", "Y").to_euler()
     c.keyframe_insert("location", frame=60)
     c.keyframe_insert("rotation_euler", frame=60)
 
@@ -172,11 +173,11 @@ def shot2():
     # Browser cursor.
     cursor = cube("Cursor", (1.35, -.035, 2.60), (.025, .012, .11), WHITE, .006)
     cursor.rotation_euler[1] = math.radians(-25)
-    c = cam((4.4, -7.4, 3.65), (0, .0, 2.15), 52)
+    c = cam((0.55, -10.5, 2.70), (0, .0, 2.20), 48)
     bpy.context.scene.camera = c
     c.keyframe_insert("location", frame=1)
-    c.location = (1.25, -5.0, 2.45)
-    c.rotation_euler = (Vector((0, 0, 2.15)) - c.location).to_track_quat("-Z", "Y").to_euler()
+    c.location = (-0.55, -9.2, 2.55)
+    c.rotation_euler = (Vector((0, 0, 2.20)) - c.location).to_track_quat("-Z", "Y").to_euler()
     c.keyframe_insert("location", frame=60)
     c.keyframe_insert("rotation_euler", frame=60)
 
@@ -196,10 +197,10 @@ def shot3():
         text(s, (-1.82, -.02, 2.78 - i * .38), .105, ma)
     glow_strip((-1.82, -.03, 1.32), (.80, .012, .018), GREEN)
     text("AUTOMATED VERIFICATION", (.05, -.02, 1.32), .095, WHITE)
-    c = cam((-4.2, -7.4, 3.25), (-.1, 0, 2.15), 52)
+    c = cam((-0.45, -10.5, 2.60), (-.1, 0, 2.15), 48)
     bpy.context.scene.camera = c
     c.keyframe_insert("location", frame=1)
-    c.location = (-1.15, -5.0, 2.38)
+    c.location = (0.45, -9.2, 2.50)
     c.rotation_euler = (Vector((-.1, 0, 2.15)) - c.location).to_track_quat("-Z", "Y").to_euler()
     c.keyframe_insert("location", frame=60)
     c.keyframe_insert("rotation_euler", frame=60)
@@ -216,11 +217,11 @@ def shot4():
     text("EXECUTE", (-2.70, -.18, 3.55), .25, CYAN)
     text("TOOL  >  VERIFY  >  DONE", (-2.70, -.18, 3.12), .115, WHITE)
     glow_strip((-2.70, -.22, 2.68), (1.00, .018, .020), GREEN)
-    c = cam((4.6, -7.6, 3.65), (0, .35, 1.55), 52)
+    c = cam((0.55, -10.8, 2.80), (0, .35, 1.70), 48)
     bpy.context.scene.camera = c
     c.keyframe_insert("location", frame=1)
-    c.location = (1.20, -5.1, 2.55)
-    c.rotation_euler = (Vector((0, .35, 1.55)) - c.location).to_track_quat("-Z", "Y").to_euler()
+    c.location = (-0.55, -9.4, 2.65)
+    c.rotation_euler = (Vector((0, .35, 1.70)) - c.location).to_track_quat("-Z", "Y").to_euler()
     c.keyframe_insert("location", frame=60)
     c.keyframe_insert("rotation_euler", frame=60)
 
@@ -233,11 +234,11 @@ def shot5():
     text("AI  +  COMPUTER  +  ACTION", (0, -.35, 1.12), .15, WHITE, "CENTER")
     text("WORKS WHILE YOU WORK", (0, -.35, .62), .115, GREEN, "CENTER")
     glow_strip((0, -.45, .35), (2.2, .02, .02), CYAN)
-    c = cam((3.8, -7.5, 3.6), (0, -.2, 1.35), 52)
+    c = cam((0.45, -10.5, 2.75), (0, -.2, 1.45), 48)
     bpy.context.scene.camera = c
     c.keyframe_insert("location", frame=1)
-    c.location = (0, -5.0, 2.35)
-    c.rotation_euler = (Vector((0, -.2, 1.35)) - c.location).to_track_quat("-Z", "Y").to_euler()
+    c.location = (-0.45, -9.2, 2.55)
+    c.rotation_euler = (Vector((0, -.2, 1.45)) - c.location).to_track_quat("-Z", "Y").to_euler()
     c.keyframe_insert("location", frame=60)
     c.keyframe_insert("rotation_euler", frame=60)
 
