@@ -76,10 +76,10 @@ async def generate_free_motion_video(text: str, title: str | None = None, fps: i
 
     cmd = [
         "ffmpeg", "-y",
-        "-f", "lavfi", "-i", f"color=c=0x050914:s=1080x1920:r={fps}",
+        "-f", "lavfi", "-i", f"color=c=0x050914:s=720x1280:r={min(fps,24)}",
         "-i", str(audio_path),
         "-vf", filter_graph,
-        "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+        "-c:v", "libx264", "-preset", "ultrafast", "-crf", "28",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "128k",
         "-shortest", str(video_path),
