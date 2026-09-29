@@ -21,23 +21,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install FFmpeg
+      - name: Install FFmpeg + Blender
         run: |
           set -e
           sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg
+          sudo apt-get install -y ffmpeg blender
           ffmpeg -version | head -n 1
+          blender --version | head -n 1
 
       - name: Generate high-quality free TechMind Short
         run: |
           set -e
-          python scripts/generate_techmind.py
+          blender -b --python scripts/render_cinematic.py
 
       - name: Validate output
         run: |
           set -e
-          test -s build/techmind-daily.mp4
-          ffprobe -v error -select_streams v:0             -show_entries stream=width,height,r_frame_rate             -of default=noprint_wrappers=1 build/techmind-daily.mp4
+          test -s build/techmind-cinematic.mp4
+          ffprobe -v error -select_streams v:0             -show_entries stream=width,height,r_frame_rate             -of default=noprint_wrappers=1 build/techmind-cinematic.mp4
           ffprobe -v error -show_entries format=duration             -of default=noprint_wrappers=1 build/techmind-daily.mp4
 
       - name: Save MP4
