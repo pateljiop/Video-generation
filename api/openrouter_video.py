@@ -66,7 +66,13 @@ async def generate_video(
             headers=_headers(api_key),
             json=payload,
         )
-        response.raise_for_status()
+        if response.is_error:
+            logger.error(
+                "OpenRouter video submit failed: status=%s body=%s",
+                response.status_code,
+                response.text[:2000],
+            )
+            response.raise_for_status()
         job = response.json()
 
         job_id = job["id"]
