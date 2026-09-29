@@ -25,14 +25,14 @@ jobs:
         run: |
           set -e
           sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg blender
+          sudo apt-get install -y ffmpeg blender libegl1 libgl1 xvfb
           ffmpeg -version | head -n 1
           blender --version | head -n 1
 
       - name: Generate cinematic TechMind Short
         run: |
           set -e
-          blender -b --python scripts/render_cinematic.py
+          xvfb-run -a blender -b --python scripts/render_cinematic.py
           python -m pip install --quiet edge-tts
           edge-tts --voice hi-IN-MadhurNeural --rate +8% --text "AI agents ab sirf chat nahi karte. Ye computer par apps khol sakte hain, web browse kar sakte hain, code likh sakte hain, aur task complete hone tak khud verify bhi kar sakte hain. TechMind — AI jo aapke computer ke saath kaam karta hai." --write-media build/voice.mp3
           ffmpeg -y -i build/techmind-cinematic.mp4 -i build/voice.mp3 -c:v copy -c:a aac -b:a 128k -shortest build/techmind-daily.mp4
