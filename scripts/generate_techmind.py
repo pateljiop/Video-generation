@@ -85,28 +85,31 @@ def generate_free_wan_hero() -> Path | None:
         remote_path = uploaded[0]
 
         payload = {
-            "data": [
-                {"path": remote_path, "meta": {"_type": "gradio.FileData"}, "orig_name": source.name},
-                (
-                    "Cinematic live-action close-up of a futuristic computer workstation at night, "
-                    "a powerful AI agent operating a laptop, screen glow reflecting across the desk, "
-                    "subtle hand movement, cursor activity, shallow depth of field, realistic glass "
-                    "and metal, blue and cyan practical lighting, smooth slow camera push-in, "
-                    "premium technology commercial, photorealistic, natural motion, no text, no logos."
-                ),
-                (
-                    "static image, frozen frame, cartoon, illustration, anime, low quality, blurry, "
-                    "warped laptop, distorted hands, extra fingers, text, subtitles, watermark, logo"
-                ),
-                3.0, 1.0, 1.0, 4, 42, True,
-            ]
+            "input_image": {"path": remote_path, "meta": {"_type": "gradio.FileData"}, "orig_name": source.name},
+            "prompt": (
+                "Cinematic live-action close-up of a futuristic computer workstation at night, "
+                "a powerful AI agent operating a laptop, screen glow reflecting across the desk, "
+                "subtle hand movement, cursor activity, shallow depth of field, realistic glass "
+                "and metal, blue and cyan practical lighting, smooth slow camera push-in, "
+                "premium technology commercial, photorealistic, natural motion, no text, no logos."
+            ),
+            "negative_prompt": (
+                "static image, frozen frame, cartoon, illustration, anime, low quality, blurry, "
+                "warped laptop, distorted hands, extra fingers, text, subtitles, watermark, logo"
+            ),
+            "duration_seconds": 3.0,
+            "guidance_scale": 1.0,
+            "guidance_scale_2": 1.0,
+            "steps": 4,
+            "seed": 42,
+            "randomize_seed": True,
         }
 
         started = subprocess.check_output(
             ["curl", "-sS", "-X", "POST", *auth,
              "-H", "Content-Type: application/json",
              "--data", json.dumps(payload),
-             f"{base}/gradio_api/call/generate_video"],
+             f"{base}/gradio_api/call/v2/generate_video"],
             text=True,
         )
         event_id = json.loads(started).get("event_id")
@@ -115,7 +118,7 @@ def generate_free_wan_hero() -> Path | None:
         print(f"WAN_EVENT_ID={event_id}")
 
         stream = subprocess.check_output(
-            ["curl", "-sS", "-N", *auth, f"{base}/gradio_api/call/generate_video/{event_id}"],
+            ["curl", "-sS", "-N", *auth, f"{base}/gradio_api/call/v2/generate_video/{event_id}"],
             text=True,
         )
         print("WAN_STREAM_TAIL=" + stream[-1800:].replace("\\n", " | "))
