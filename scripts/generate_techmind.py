@@ -4,12 +4,15 @@ No paid video/image API is used. Visuals are original motion-graphics, not copie
 """
 from __future__ import annotations
 
+import os
+import shutil
 import subprocess
 from pathlib import Path
 
 OUT = Path("build")
 OUT.mkdir(exist_ok=True)
 W, H, FPS = 1080, 1920, 20
+HERO: Path | None = None
 
 NARRATION = (
     "AI agents ab sirf chat nahi karte. "
@@ -31,6 +34,135 @@ SCENES = [
 def run(cmd: list[str]) -> None:
     print("+", " ".join(cmd))
     subprocess.run(cmd, check=True)
+
+
+def make_cinematic_source_image() -> Path:
+    """Create a clean source frame for the free Wan I2V hero shot."""
+    from PIL import Image, ImageDraw, ImageFilter
+
+    p = OUT / "hero_source.png"
+    img = Image.new("RGB", (832, 480), (5, 9, 18))
+    px = img.load()
+    for y in range(img.height):
+        for x in range(img.width):
+            glow = max(0, 1 - (((x - 430) / 520) ** 2 + ((y - 235) / 360) ** 2))
+            px[x, y] = (
+                int(5 + 8 * glow),
+                int(9 + 18 * glow),
+                int(18 + 35 * glow),
+            )
+
+    d = ImageDraw.Draw(img, "RGBA")
+    # Desk and ambient light.
+    d.rectangle((0, 350, 832, 480), fill=(8, 12, 20, 255))
+    d.rectangle((0, 342, 832, 358), fill=(25, 40, 55, 255))
+    d.ellipse((560, 330, 820, 510), fill=(20, 110, 180, 45))
+
+    # Laptop body/screen, deliberately simple so Wan supplies the realism and motion.
+    d.rounded_rectangle((245, 95, 625, 335), 18, fill=(14, 20, 31, 255), outline=(80, 105, 130, 190), width=3)
+    d.rounded_rectangle((265, 115, 605, 300), 10, fill=(4, 13, 25, 255))
+    d.rectangle((285, 135, 585, 280), fill=(7, 22, 38, 255))
+    for i, w in enumerate((220, 185, 250, 145, 205)):
+        y = 155 + i * 22
+        d.rounded_rectangle((300, y, 300 + w, y + 7), 3, fill=(70, 190, 235, 165))
+    d.rounded_rectangle((220, 332, 650, 365), 8, fill=(24, 30, 40, 255))
+    d.polygon([(220, 365), (650, 365), (710, 405), (160, 405)], fill=(18, 24, 33, 255))
+    d.rounded_rectangle((385, 375, 475, 392), 5, fill=(65, 78, 92, 170))
+
+    # Abstract hands/foreground silhouette.
+    d.ellipse((115, 355, 255, 470), fill=(35, 43, 53, 220))
+    d.ellipse((590, 360, 760, 485), fill=(35, 43, 53, 220))
+
+    # Cinematic practical lights and subtle particles.
+    for cx, cy, r in [(110, 95, 45), (740, 110, 55), (680, 300, 28)]:
+        d.ellipse((cx-r, cy-r, cx+r, cy+r), fill=(50, 180, 255, 25))
+    for x, y in [(92, 260), (720, 240), (770, 185), (180, 160), (650, 85)]:
+        d.ellipse((x, y, x+3, y+3), fill=(120, 220, 255, 130))
+
+    img = img.filter(ImageFilter.GaussianBlur(radius=0.25))
+    img.save(p)
+    return p
+
+
+def generate_free_wan_hero() -> Path | None:
+    """Try one free Hugging Face ZeroGPU Wan 2.2 I2V hero shot; return None on any quota/queue/API failure."""
+    source = make_cinematic_source_image()
+    hero = OUT / "wan_hero.mp4"
+    try:
+        run(["python", "-m", "pip", "install", "--quiet", "gradio_client", "pillow"])
+        from gradio_client import Client, handle_file
+
+        token = os.getenv("HF_TOKEN") or None
+        client = Client(
+            "zerogpu-aoti/wan2-2-fp8da-aoti-faster",
+            token=token,
+            verbose=True,
+        )
+        print("Attempting free Hugging Face ZeroGPU Wan 2.2 hero generation...")
+        result = client.predict(
+            input_image=handle_file(str(source)),
+            prompt=(
+                "Cinematic live-action close-up of a futuristic computer workstation at night, "
+                "a powerful AI agent operating a laptop, screen glow reflecting across the desk, "
+                "subtle hand movement, cursor activity, shallow depth of field, realistic glass "
+                "and metal, blue and cyan practical lighting, smooth slow camera push-in, "
+                "premium technology commercial, photorealistic, natural motion, no text, no logos."
+            ),
+            negative_prompt=(
+                "static image, frozen frame, cartoon, illustration, anime, low quality, blurry, "
+                "warped laptop, distorted hands, extra fingers, text, subtitles, watermark, logo"
+            ),
+            duration_seconds=3.0,
+            guidance_scale=1.0,
+            guidance_scale_2=1.0,
+            steps=4,
+            seed=42,
+            randomize_seed=True,
+            api_name="/generate_video",
+        )
+        video_path = result[0] if isinstance(result, (tuple, list)) else result
+        if not video_path:
+            raise RuntimeError(f"Space returned no video: {result!r}")
+        shutil.copyfile(str(video_path), hero)
+        duration = float(subprocess.check_output([
+            "ffprobe", "-v", "error", "-show_entries", "format=duration",
+            "-of", "csv=p=0", str(hero)
+        ], text=True).strip())
+        if duration < 1.0:
+            raise RuntimeError(f"Wan output too short: {duration:.2f}s")
+        print(f"FREE_WAN_HERO={hero} duration={duration:.2f}s")
+        return hero
+    except Exception as exc:
+        print(f"WAN_ZERO_GPU_FALLBACK={type(exc).__name__}: {exc}")
+        return None
+
+
+def make_hero_scene(dur: float) -> Path:
+    out = OUT / "scene_0.mp4"
+    # Crop the landscape hero into a vertical commercial frame and layer readable hook text.
+    vf = (
+        "scale=1080:1920:force_original_aspect_ratio=increase,"
+        "crop=1080:1920,eq=contrast=1.06:saturation=1.08,"
+        "drawbox=x=0:y=0:w=1080:h=1920:color=0x020617@0.18:t=fill,"
+        "drawbox=x=50:y=110:w=980:h=2:color=0x38bdf8@0.55:t=fill,"
+        "drawtext=text='AI AGENTS':fontcolor=0x67e8f9:fontsize=30:x=60:y=180,"
+        "drawtext=text='CHAT SE AAGE':fontcolor=white:fontsize=74:x=60:y=225,"
+        "drawtext=text='Computer par kaam karte hain.':fontcolor=0xcbd5e1:fontsize=30:x=60:y=330,"
+        "drawbox=x=60:y=1780:w=960:h=5:color=0x1e293b:t=fill,"
+        f"drawbox=x=60:y=1780:w='960*min(t/{max(dur,0.1):.3f},1)':h=5:color=0x38bdf8:t=fill,"
+        "drawtext=text='TECHMIND':fontcolor=0x67e8f9:fontsize=24:x=60:y=70"
+    )
+    run([
+        "ffmpeg", "-y", "-i", str(HERO),
+        "-vf", vf,
+        "-t", f"{dur:.3f}",
+        "-an",
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "21",
+        "-pix_fmt", "yuv420p",
+        str(out),
+    ])
+    return out
+
 
 def esc(s: str) -> str:
     return (s.replace("\\", "\\\\")
@@ -251,7 +383,10 @@ def scene_filter(kind: str, dur: float, kicker: str, title: str, line1: str, lin
     return ",".join(f)
 
 def make_scene(i: int, scene: tuple[str, str, str, str, str], dur: float) -> Path:
+    global HERO
     kicker, title, line1, line2, kind = scene
+    if i == 0 and HERO is not None and HERO.exists():
+        return make_hero_scene(dur)
     out = OUT / f"scene_{i}.mp4"
     vf = scene_filter(kind, dur, kicker, title, line1, line2)
     run([
@@ -266,7 +401,10 @@ def make_scene(i: int, scene: tuple[str, str, str, str, str], dur: float) -> Pat
     return out
 
 def main() -> None:
-    run(["python", "-m", "pip", "install", "--quiet", "edge-tts"])
+    global HERO
+    run(["python", "-m", "pip", "install", "--quiet", "edge-tts", "gradio_client", "pillow"])
+    # One short free AI-video hero shot; all remaining scenes stay local/free.
+    HERO = generate_free_wan_hero()
     run([
         "edge-tts", "--voice", "hi-IN-MadhurNeural", "--rate", "+8%",
         "--text", NARRATION, "--write-media", str(OUT / "voice.mp3")
