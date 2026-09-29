@@ -33,6 +33,7 @@ if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
 import argparse
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -41,6 +42,7 @@ from loguru import logger
 from api.config import api_config
 from api.tasks import task_manager
 from api.dependencies import shutdown_pixelle_video
+from pixelle_video.config.manager import ConfigManager
 
 # Import routers
 from api.routers import (
@@ -66,6 +68,19 @@ async def lifespan(app: FastAPI):
     """
     # Startup
     logger.info("🚀 Starting Pixelle-Video API...")
+    # Free deployment mode: reuse the configured OpenRouter key for text planning only.
+    # Video/image generation stays on the native pipeline and never calls paid video APIs.
+    openrouter_key = os.getenv("OPENROUTER_API_KEY", "").strip()
+    if openrouter_key:
+        cfg = ConfigManager()
+        llm = cfg.get_llm_config()
+        if not llm["api_key"] or llm["api_key"].strip() in {"dummy-key", "dummy"}:
+            cfg.set_llm_config(
+                api_key=openrouter_key,
+                base_url="https://openrouter.ai/api/v1",
+                model="openrouter/free",
+            )
+            logger.info("✅ Free OpenRouter text routing enabled for content planning")
     await task_manager.start()
     logger.info("✅ Pixelle-Video API started successfully\n")
     
