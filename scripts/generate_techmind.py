@@ -67,7 +67,16 @@ def generate_free_wan_hero() -> Path | None:
     """Try one free Hugging Face ZeroGPU Wan 2.2 I2V hero shot; return None on any quota/queue/API failure."""
     hero = OUT / "wan_hero.mp4"
     try:
-        run(["python", "-m", "pip", "install", "--quiet", "gradio_client"])
+        install = subprocess.run([
+            "python", "-m", "pip", "install", "--disable-pip-version-check", "--no-input", "gradio-client==2.7.1"
+        ], text=True)
+        if install.returncode != 0:
+            print(f"WAN_CLIENT_INSTALL_FAILED={install.returncode}")
+            return None
+        check = subprocess.run(["python", "-c", "import gradio_client; print(gradio_client.__version__)"], text=True)
+        if check.returncode != 0:
+            print(f"WAN_CLIENT_IMPORT_FAILED={check.returncode}")
+            return None
         source = make_cinematic_source_image()
         from gradio_client import Client, handle_file
 
