@@ -24,9 +24,8 @@ def run(cmd):
 def esc(s: str) -> str:
     return s.replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'").replace("%", "\\%").replace(",", "\\,")
 
-def make_scene(i, title, line1, line2):
+def make_scene(i, title, line1, line2, dur):
     p = OUT / f"scene_{i}.mp4"
-    dur = 3.35
     common = (
         f"drawbox=x=55:y=90:w=970:h=1740:color=0x0b1220@0.96:t=fill,"
         f"drawbox=x=55:y=90:w=970:h=8:color=0x55d6ff@1:t=fill,"
@@ -102,7 +101,10 @@ def main():
             "TechMind: AI jo aapke computer ke saath kaam karta hai.")
     run(["python","-m","pip","install","--quiet","edge-tts"])
     run(["edge-tts","--voice","hi-IN-MadhurNeural","--rate","+5%","--text",text,"--write-media",str(OUT/"voice.mp3")])
-    clips = [make_scene(i, *scene) for i, scene in enumerate(SCENES)]
+    audio_duration = float(subprocess.check_output(["ffprobe","-v","error","-show_entries","format=duration","-of","csv=p=0",str(OUT/"voice.mp3")], text=True).strip())
+    scene_duration = audio_duration / len(SCENES) + 0.03
+    print(f"TTS duration={audio_duration:.2f}s; scene duration={scene_duration:.2f}s")
+    clips = [make_scene(i, *scene, scene_duration) for i, scene in enumerate(SCENES)]
     concat = OUT/"concat.txt"
     concat.write_text("".join(f"file '{p.resolve()}'\n" for p in clips), encoding="utf-8")
     silent = OUT/"silent.mp4"
