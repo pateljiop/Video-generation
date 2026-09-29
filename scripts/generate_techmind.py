@@ -88,9 +88,9 @@ def scene_filter(kind: str, dur: float, title: str, kicker: str, line1: str, lin
             "drawbox=x=120:y=980:w=820:h=260:color=0x07111f:t=fill",
             text_filter("TASK", "150", "1030", 22, "0x94a3b8"),
             text_filter("Open mail, find the latest report", "150", "1090", 31, "white"),
-            "drawbox=x=150:y=1165:w='560*min(t/2,1)':h=10:color=0x38bdf8:t=fill",
+            "drawbox=x=150:y=1165:w='560*min(t/2\\,1)':h=10:color=0x38bdf8:t=fill",
             text_filter("AGENT WORKING", "150", "1205", 20, "0x67e8f9"),
-            "drawbox=x='180+650*min(t/3,1)':y='900+70*sin(3*t)':w=12:h=18:color=0xffffff:t=fill",
+            "drawbox=x='180+650*min(t/3\\,1)':y='900+70*sin(3*t)':w=12:h=18:color=0xffffff:t=fill",
         ]
     elif kind == "apps":
         # App launcher / workflow visual.
@@ -107,13 +107,13 @@ def scene_filter(kind: str, dur: float, title: str, kicker: str, line1: str, lin
             text_filter("TERM", "755", "715", 34, "white"),
             text_filter("EXEC", "755", "785", 22, "0xfbbf24"),
             "drawbox=x=190:y=1040:w=700:h=12:color=0x1e293b:t=fill",
-            "drawbox=x=190:y=1040:w='700*min(t/3,1)':h=12:color=0x38bdf8:t=fill",
+            "drawbox=x=190:y=1040:w='700*min(t/3\\,1)':h=12:color=0x38bdf8:t=fill",
             text_filter("OPEN  →  READ  →  ACT", "220", "1090", 32, "white"),
             "drawbox=x=170:y=1180:w=740:h=210:color=0x111827:t=fill",
             text_filter("ONE AGENT", "205", "1225", 25, "0x67e8f9"),
             text_filter("multiple tools / one workflow", "205", "1280", 34, "white"),
             text_filter(line2, "205", "1350", 24, "0x94a3b8"),
-            "drawbox=x='120+760*min(t/4,1)':y=570:w=16:h=16:color=0x67e8f9:t=fill",
+            "drawbox=x='120+760*min(t/4\\,1)':y=570:w=16:h=16:color=0x67e8f9:t=fill",
         ]
     elif kind == "browser":
         # Browser with search bar, result cards, scrolling highlight.
@@ -161,7 +161,7 @@ def scene_filter(kind: str, dur: float, title: str, kicker: str, line1: str, lin
             text_filter("> opening browser...", "125", "1065", 25, "0x67e8f9"),
             text_filter("> tests passed", "125", "1130", 25, "0x86efac"),
             text_filter("> task complete", "125", "1195", 25, "white"),
-            "drawbox=x=125:y='1260+15*sin(4*t)':w='760*min(t/3,1)':h=7:color=0x22c55e:t=fill",
+            "drawbox=x=125:y='1260+15*sin(4*t)':w='760*min(t/3\\,1)':h=7:color=0x22c55e:t=fill",
         ]
     elif kind == "agent":
         # Large connected execution graph with moving pulse.
@@ -176,7 +176,7 @@ def scene_filter(kind: str, dur: float, title: str, kicker: str, line1: str, lin
             text_filter("VERIFY", "790", "755", 30, "white"),
             text_filter("→", "365", "750", 48, "0x67e8f9"),
             text_filter("→", "680", "750", 48, "0x67e8f9"),
-            "drawbox=x='125+790*min(t/4,1)':y=690:w=20:h=170:color=0x67e8f9@0.22:t=fill",
+            "drawbox=x='125+790*min(t/4\\,1)':y=690:w=20:h=170:color=0x67e8f9@0.22:t=fill",
             "drawbox=x=150:y=980:w=780:h=250:color=0x111827:t=fill",
             text_filter("VERIFYING RESULT", "190", "1030", 25, "0x67e8f9"),
             text_filter("✓ browser action", "190", "1090", 28, "0x86efac"),
@@ -193,7 +193,7 @@ def scene_filter(kind: str, dur: float, title: str, kicker: str, line1: str, lin
             text_filter("TECHMIND", "235", "755", 52, "0x67e8f9"),
             text_filter("COMPUTER + AI", "235", "885", 42, "white"),
             text_filter("Plan  •  Act  •  Verify", "235", "970", 30, "0xcbd5e1"),
-            "drawbox=x=180:y='1090+20*sin(2*t)':w='680*min(t/2,1)':h=7:color=0x38bdf8:t=fill",
+            "drawbox=x=180:y='1090+20*sin(2*t)':w='680*min(t/2\\,1)':h=7:color=0x38bdf8:t=fill",
             text_filter(line1, "110", "1280", 30, "white"),
             text_filter(line2, "110", "1350", 24, "0x94a3b8"),
         ]
