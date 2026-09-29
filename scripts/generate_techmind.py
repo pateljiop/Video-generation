@@ -86,10 +86,10 @@ def make_cinematic_source_image() -> Path:
 
 def generate_free_wan_hero() -> Path | None:
     """Try one free Hugging Face ZeroGPU Wan 2.2 I2V hero shot; return None on any quota/queue/API failure."""
-    source = make_cinematic_source_image()
     hero = OUT / "wan_hero.mp4"
     try:
         run(["python", "-m", "pip", "install", "--quiet", "gradio_client", "pillow"])
+        source = make_cinematic_source_image()
         from gradio_client import Client, handle_file
 
         token = os.getenv("HF_TOKEN") or None
