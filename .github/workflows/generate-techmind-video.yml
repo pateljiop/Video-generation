@@ -50,7 +50,8 @@ jobs:
               "text": os.environ["PROMPT"],
               "mode": "generate",
               "n_scenes": 1,
-              "title": "TechMind Central"
+              "title": "TechMind Central",
+              "frame_template": "1920x1080/image_wide_darktech.html"
           }))
           PY
           )
