@@ -66,8 +66,8 @@ def bg() -> list[str]:
 def cursor(x: str, y: str, enable: str | None = None) -> list[str]:
     # Pointer + click ring. The ring appears only at action moments.
     out = [
-        box(x, y, "13", "13", "white", enable),
-        box(f"({x})+10", f"({y})+10", "2", "2", "0x67e8f9", enable),
+        box(f"'{" + "x" + "}'", f"'{" + "y" + "}'", "13", "13", "white", enable),
+        box(f"'({" + "x" + "})+10'", f"'({" + "y" + "})+10'", "2", "2", "0x67e8f9", enable),
     ]
     if enable:
         out.append(
