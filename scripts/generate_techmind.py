@@ -82,6 +82,14 @@ def make_scene(i, title, line1, line2):
         "drawtext=text='Computer + AI Agent':fontcolor=white:fontsize=44:x=220:y=650,"
         "drawtext=text='Plan  •  Act  •  Verify':fontcolor=0xb8c7d9:fontsize=32:x=220:y=750,"
         "drawbox=x=250:y=930:w=580:h=8:color=0x55d6ff@0.5:t=fill"
+        ,
+        "drawbox=x=100:y=360:w=880:h=650:color=0x07101d:t=fill,"
+        "drawbox=x=150:y=440:w=780:h=430:color=0x111c31:t=fill,"
+        "drawtext=text='TECHMIND':fontcolor=0x55d6ff:fontsize=34:x=220:y=520,"
+        "drawtext=text='Computer + AI Agent':fontcolor=white:fontsize=44:x=220:y=650,"
+        "drawtext=text='Plan  •  Act  •  Verify':fontcolor=0xb8c7d9:fontsize=32:x=220:y=750,"
+        "drawtext=text='READY':fontcolor=0x86efac:fontsize=38:x=220:y=850,"
+        "drawbox=x='250+120*sin(2*PI*t/2)':y=930:w=580:h=8:color=0x55d6ff@0.5:t=fill"
     ]
     vf = common + "," + visuals[i]
     run(["ffmpeg","-y","-f","lavfi","-i",f"color=c=0x030712:s={W}x{H}:r={FPS}:d={dur}",
