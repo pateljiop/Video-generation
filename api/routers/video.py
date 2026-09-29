@@ -235,8 +235,12 @@ async def generate_video_async(
     try:
         logger.info(f"Async video generation: {request_body.text[:50]}...")
 
-        # Prefer the hosted OpenRouter backend when its secret is configured.
-        if os.getenv("OPENROUTER_API_KEY"):
+        # Prefer OpenRouter only when an explicitly enabled paid video model is configured.
+        # The OpenRouter free router is text/image-only, so free mode falls back to Pixelle's
+        # native pipeline instead of sending an unsupported /videos request.
+        openrouter_model = os.getenv("OPENROUTER_VIDEO_MODEL", "").strip()
+        use_openrouter = bool(os.getenv("OPENROUTER_API_KEY") and openrouter_model and not openrouter_model.endswith(":free"))
+        if use_openrouter:
             task = task_manager.create_task(
                 task_type=TaskType.VIDEO_GENERATION,
                 request_params=request_body.model_dump()
@@ -251,7 +255,7 @@ async def generate_video_async(
 
                 result = await generate_openrouter_video(
                     request_body.text,
-                    model=os.getenv("OPENROUTER_VIDEO_MODEL"),
+                    model=openrouter_model,
                     duration=5,
                     aspect_ratio=aspect_ratio,
                     resolution=os.getenv("OPENROUTER_VIDEO_RESOLUTION", "720p"),
@@ -267,13 +271,9 @@ async def generate_video_async(
                     "usage": result.get("usage"),
                 }
 
-            await task_manager.execute_task(
-                task_id=task.task_id,
-                coro_func=execute_openrouter_generation
-            )
-
+            await task_manager.execute_task(task_id=task.task_id, coro_func=execute_openrouter_generation)
             return VideoGenerateAsyncResponse(task_id=task.task_id)
-        
+
         # Create task
         task = task_manager.create_task(
             task_type=TaskType.VIDEO_GENERATION,
