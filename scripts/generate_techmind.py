@@ -47,7 +47,10 @@ def dt(txt: str, x: str, y: str, size: int, color: str = "white",
     return f
 
 def box(x: str, y: str, w: str, h: str, color: str, enable: str | None = None) -> str:
-    f = f"drawbox=x={x}:y={y}:w={w}:h={h}:color={color}:t=fill"
+    # Quote coordinates so FFmpeg expressions containing commas are parsed as one value.
+    x = x.strip("'")
+    y = y.strip("'")
+    f = f"drawbox=x='{x}':y='{y}':w={w}:h={h}:color={color}:t=fill"
     if enable:
         f += f":enable='{enable}'"
     return f
@@ -66,14 +69,15 @@ def bg() -> list[str]:
 def cursor(x: str, y: str, enable: str | None = None) -> list[str]:
     # Pointer + click ring. The ring appears only at action moments.
     out = [
-        box(f"'{x}'", f"'{y}'", "13", "13", "white", enable),
-        box(f"'({x})+10'", f"'({y})+10'", "2", "2", "0x67e8f9", enable),
+        box(x, y, "13", "13", "white", enable),
+        box(f"({x})+10", f"({y})+10", "2", "2", "0x67e8f9", enable),
     ]
     if enable:
         out.append(
             f"drawbox=x='({x})-18':y='({y})-18':w=48:h=48:color=0x67e8f9@0.35:t=4:enable='{enable}'"
         )
     return out
+
 def common_title(f: list[str], kicker: str, title: str, line: str) -> None:
     f.extend([
         dt(kicker, "60", "250", 24, "0x67e8f9"),
