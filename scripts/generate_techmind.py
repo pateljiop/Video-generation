@@ -118,6 +118,9 @@ def generate_free_wan_hero() -> Path | None:
             ["curl", "-sS", "-N", *auth, f"{base}/gradio_api/call/generate_video/{event_id}"],
             text=True,
         )
+        print("WAN_STREAM_TAIL=" + stream[-1800:].replace("\\n", " | "))
+        if "event: error" in stream and "event: complete" not in stream:
+            raise RuntimeError("Wan queue error: " + stream[-1200:])
         complete = stream.rsplit("event: complete", 1)[-1]
         data_line = next((ln for ln in complete.splitlines() if ln.startswith("data: ")), None)
         if not data_line:
