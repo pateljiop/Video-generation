@@ -1,25 +1,14 @@
 name: Generate TechMind Video
-# Native/free pipeline verification run
 
 on:
   schedule:
     - cron: '30 4 * * *'
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - '.github/workflows/generate-techmind-video.yml'
-      - 'api/openrouter_video.py'
+      - 'scripts/generate_techmind.py'
   workflow_dispatch:
-    inputs:
-      prompt:
-        description: "Video topic/prompt"
-        required: true
-        default: "AI Agents अब सिर्फ Chat नहीं करते — आपका Computer भी चला सकते हैं"
-      filename:
-        description: "Output MP4 filename"
-        required: true
-        default: "techmind-ai-agents-computer.mp4"
 
 permissions:
   contents: read
@@ -29,84 +18,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Verify OpenRouter video models
-        env:
-          RENDER_URL: https://pixelle-video-31d7.onrender.com
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate high-quality free TechMind Short
         run: |
           set -e
-          echo "Checking OpenRouter video model capabilities..."
-          response=$(curl -fsS --retry 3 --retry-delay 3 "$RENDER_URL/api/video/openrouter/models")
-          echo "$response" | jq -r '.data[] | [.id, (.supported_parameters // [] | join(","))] | @tsv'
-          test "$(echo "$response" | jq '.data | length')" -gt 0
+          python scripts/generate_techmind.py
 
-      - name: Start Render generation
-        id: start
-        env:
-          RENDER_URL: https://pixelle-video-31d7.onrender.com
-          PROMPT: ${{ inputs.prompt || 'AI Agents अब सिर्फ Chat नहीं करते — आपका Computer भी चला सकते हैं. Show a modern desktop AI agent controlling a computer, opening apps, browsing the web, writing code, and executing tasks, with a cinematic dark-tech visual style.' }}
+      - name: Validate output
         run: |
           set -e
-          payload=$(python - <<'PY'
-          import json, os
-          print(json.dumps({
-              "text": "AI Agents ab sirf chat nahi karte.\n\nYe agents computer par apps khol sakte hain, web browse kar sakte hain, code likh sakte hain aur tasks execute kar sakte hain.\n\nTechMind: AI jo aapke computer ke saath kaam karta hai.",
-              "mode": "fixed",
-              "n_scenes": 1,
-              "title": "TechMind Central",
-              "frame_template": "1080x1920/static_default.html",
-              "tts_workflow": "selfhost/tts_edge.json"
-          }))
-          PY
-          )
-          response=$(curl -fsS --retry 3 --retry-delay 5 \
-            -X POST "$RENDER_URL/api/video/generate/async" \
-            -H "Content-Type: application/json" \
-            --data "$payload")
-          echo "$response"
-          task_id=$(echo "$response" | jq -r '.task_id')
-          test "$task_id" != "null" && test -n "$task_id"
-          echo "task_id=$task_id" >> "$GITHUB_OUTPUT"
+          test -s build/techmind-daily.mp4
+          ffprobe -v error -select_streams v:0             -show_entries stream=width,height,r_frame_rate             -of default=noprint_wrappers=1 build/techmind-daily.mp4
+          ffprobe -v error -show_entries format=duration             -of default=noprint_wrappers=1 build/techmind-daily.mp4
 
-      - name: Wait for video
-        id: wait
-        env:
-          RENDER_URL: https://pixelle-video-31d7.onrender.com
-          TASK_ID: ${{ steps.start.outputs.task_id }}
-        run: |
-          set -e
-          for i in $(seq 1 90); do
-            response=$(curl -fsS --retry 2 --retry-delay 3 "$RENDER_URL/api/tasks/$TASK_ID")
-            status=$(echo "$response" | jq -r '.status')
-            echo "Attempt $i: $status"
-            if [ "$status" = "completed" ]; then
-              video_url=$(echo "$response" | jq -r '.result.video_url')
-              test "$video_url" != "null" && test -n "$video_url"
-              echo "video_url=$video_url" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            if [ "$status" = "failed" ] || [ "$status" = "cancelled" ]; then
-              echo "$response"
-              exit 1
-            fi
-            sleep 10
-          done
-          echo "Timed out waiting for task $TASK_ID"
-          exit 1
-
-      - name: Download MP4
-        env:
-          VIDEO_URL: ${{ steps.wait.outputs.video_url }}
-          FILENAME: ${{ inputs.filename || 'techmind-ai-agents-computer.mp4' }}
-        run: |
-          set -e
-          curl -fL --retry 5 --retry-delay 5 "$VIDEO_URL" -o "$FILENAME"
-          test -s "$FILENAME"
-          file "$FILENAME"
-
-      - name: Save MP4 as GitHub Actions artifact
+      - name: Save MP4
         uses: actions/upload-artifact@v4
         with:
-          name: techmind-central-video
-          path: ${{ inputs.filename || 'techmind-ai-agents-computer.mp4' }}
+          name: techmind-daily-video
+          path: build/techmind-daily.mp4
           if-no-files-found: error
           retention-days: 30
