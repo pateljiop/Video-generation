@@ -41,7 +41,9 @@ def esc(s: str) -> str:
 
 def dt(txt: str, x: str, y: str, size: int, color: str = "white",
        enable: str | None = None, alpha: str = "1") -> str:
-    f = f"drawtext=text='{esc(txt)}':fontcolor={color}@{alpha}:fontsize={size}:x={x}:y={y}"
+    x = x.strip("'")
+    y = y.strip("'")
+    f = f"drawtext=text='{esc(txt)}':fontcolor={color}@{alpha}:fontsize={size}:x='{x}':y='{y}'"
     if enable:
         f += f":enable='{enable}'"
     return f
