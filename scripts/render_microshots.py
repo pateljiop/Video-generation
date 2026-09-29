@@ -156,6 +156,14 @@ def shot1():
     c.rotation_euler = (Vector((0, 0, 2.15)) - c.location).to_track_quat("-Z", "Y").to_euler()
     c.keyframe_insert("location", frame=60)
     c.keyframe_insert("rotation_euler", frame=60)
+    c.location = (0.25, -8.75, 2.72)
+    c.rotation_euler = (Vector((0, 0, 2.15)) - c.location).to_track_quat("-Z", "Y").to_euler()
+    c.keyframe_insert("location", frame=120)
+    c.keyframe_insert("rotation_euler", frame=120)
+    c.location = (-0.35, -8.35, 2.62)
+    c.rotation_euler = (Vector((0, 0, 2.15)) - c.location).to_track_quat("-Z", "Y").to_euler()
+    c.keyframe_insert("location", frame=180)
+    c.keyframe_insert("rotation_euler", frame=180)
 
 def shot2():
     cube("Desk", (0, 0, 0), (4.2, 3.2, .12), DESK, .05)
@@ -180,6 +188,14 @@ def shot2():
     c.rotation_euler = (Vector((0, 0, 2.20)) - c.location).to_track_quat("-Z", "Y").to_euler()
     c.keyframe_insert("location", frame=60)
     c.keyframe_insert("rotation_euler", frame=60)
+    c.location = (-0.10, -8.70, 2.72)
+    c.rotation_euler = (Vector((0, .0, 2.20)) - c.location).to_track_quat("-Z", "Y").to_euler()
+    c.keyframe_insert("location", frame=120)
+    c.keyframe_insert("rotation_euler", frame=120)
+    c.location = (0.45, -8.30, 2.58)
+    c.rotation_euler = (Vector((0, .0, 2.20)) - c.location).to_track_quat("-Z", "Y").to_euler()
+    c.keyframe_insert("location", frame=180)
+    c.keyframe_insert("rotation_euler", frame=180)
 
 def shot3():
     cube("Desk", (0, 0, 0), (4.2, 3.2, .12), DESK, .05)
@@ -204,6 +220,14 @@ def shot3():
     c.rotation_euler = (Vector((-.1, 0, 2.15)) - c.location).to_track_quat("-Z", "Y").to_euler()
     c.keyframe_insert("location", frame=60)
     c.keyframe_insert("rotation_euler", frame=60)
+    c.location = (0.10, -8.70, 2.66)
+    c.rotation_euler = (Vector((-.1, 0, 2.15)) - c.location).to_track_quat("-Z", "Y").to_euler()
+    c.keyframe_insert("location", frame=120)
+    c.keyframe_insert("rotation_euler", frame=120)
+    c.location = (-0.40, -8.25, 2.54)
+    c.rotation_euler = (Vector((-.1, 0, 2.15)) - c.location).to_track_quat("-Z", "Y").to_euler()
+    c.keyframe_insert("location", frame=180)
+    c.keyframe_insert("rotation_euler", frame=180)
 
 def shot4():
     cube("Floor", (0, 0, 0), (4.2, 4.2, .08), DESK, .03)
@@ -224,6 +248,14 @@ def shot4():
     c.rotation_euler = (Vector((0, .35, 1.70)) - c.location).to_track_quat("-Z", "Y").to_euler()
     c.keyframe_insert("location", frame=60)
     c.keyframe_insert("rotation_euler", frame=60)
+    c.location = (-0.10, -8.85, 2.78)
+    c.rotation_euler = (Vector((0, .35, 1.70)) - c.location).to_track_quat("-Z", "Y").to_euler()
+    c.keyframe_insert("location", frame=120)
+    c.keyframe_insert("rotation_euler", frame=120)
+    c.location = (0.50, -8.40, 2.58)
+    c.rotation_euler = (Vector((0, .35, 1.70)) - c.location).to_track_quat("-Z", "Y").to_euler()
+    c.keyframe_insert("location", frame=180)
+    c.keyframe_insert("rotation_euler", frame=180)
 
 def shot5():
     cube("Stage", (0, 0, 0), (4.2, 3.0, .08), BLACK, .03)
@@ -241,6 +273,14 @@ def shot5():
     c.rotation_euler = (Vector((0, -.2, 1.45)) - c.location).to_track_quat("-Z", "Y").to_euler()
     c.keyframe_insert("location", frame=60)
     c.keyframe_insert("rotation_euler", frame=60)
+    c.location = (-0.05, -8.70, 2.72)
+    c.rotation_euler = (Vector((0, -.2, 1.45)) - c.location).to_track_quat("-Z", "Y").to_euler()
+    c.keyframe_insert("location", frame=120)
+    c.keyframe_insert("rotation_euler", frame=120)
+    c.location = (0.45, -8.25, 2.58)
+    c.rotation_euler = (Vector((0, -.2, 1.45)) - c.location).to_track_quat("-Z", "Y").to_euler()
+    c.keyframe_insert("location", frame=180)
+    c.keyframe_insert("rotation_euler", frame=180)
 
 for i, builder in enumerate([shot1, shot2, shot3, shot4, shot5], 1):
     render_shot(i, builder)
