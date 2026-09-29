@@ -27,6 +27,8 @@ def _headers(api_key: str) -> dict:
     return {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
+        "HTTP-Referer": "https://pixelle-video-31d7.onrender.com",
+        "X-Title": "TechMind Central",
     }
 
 
@@ -46,6 +48,7 @@ async def generate_video(
         raise RuntimeError("OPENROUTER_API_KEY is not configured")
 
     selected_model = model or os.getenv("OPENROUTER_VIDEO_MODEL") or DEFAULT_MODEL
+    logger.info("OpenRouter video submit model=%s", selected_model)
     duration = max(3, min(int(duration), 15))
     if aspect_ratio not in {"16:9", "9:16", "1:1"}:
         aspect_ratio = "16:9"
@@ -67,11 +70,7 @@ async def generate_video(
             json=payload,
         )
         if response.is_error:
-            logger.error(
-                "OpenRouter video submit failed: status=%s body=%s",
-                response.status_code,
-                response.text[:2000],
-            )
+            logger.error(f"OpenRouter video submit failed: status={response.status_code} body={response.text[:2000]!r}")
             response.raise_for_status()
         job = response.json()
 
