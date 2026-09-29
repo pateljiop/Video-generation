@@ -41,13 +41,13 @@ jobs:
         id: start
         env:
           RENDER_URL: https://pixelle-video-31d7.onrender.com
-          PROMPT: ${{ inputs.prompt || 'AI Agents ab sirf chat nahi karte. Ye agents computer par apps khol sakte hain, web browse kar sakte hain, code likh sakte hain aur tasks execute kar sakte hain. TechMind: AI jo aapke computer ke saath kaam karta hai.' }}
+          PROMPT: ${{ inputs.prompt || 'AI Agents अब सिर्फ Chat नहीं करते — आपका Computer भी चला सकते हैं. Show a modern desktop AI agent controlling a computer, opening apps, browsing the web, writing code, and executing tasks, with a cinematic dark-tech visual style.' }}
         run: |
           set -e
           payload=$(python - <<'PY'
           import json, os
           print(json.dumps({
-              "text": os.environ["PROMPT"],
+              "text": "AI Agents ab sirf chat nahi karte.\n\nYe agents computer par apps khol sakte hain, web browse kar sakte hain, code likh sakte hain aur tasks execute kar sakte hain.\n\nTechMind: AI jo aapke computer ke saath kaam karta hai.",
               "mode": "fixed",
               "n_scenes": 1,
               "title": "TechMind Central",
@@ -56,25 +56,14 @@ jobs:
           }))
           PY
           )
-          for attempt in 1 2 3; do
-            echo "Generation attempt $attempt/3"
-            if response=$(curl -fsS --retry 3 --retry-delay 5 \
-              -X POST "$RENDER_URL/api/video/generate/async" \
-              -H "Content-Type: application/json" \
-              --data "$payload"); then
-              echo "$response"
-              task_id=$(echo "$response" | jq -r '.task_id // empty')
-              if [ -n "$task_id" ]; then
-                echo "task_id=$task_id" >> "$GITHUB_OUTPUT"
-                exit 0
-              fi
-            else
-              echo "Render request failed on attempt $attempt"
-            fi
-            sleep 15
-          done
-          echo "Could not start video generation after 3 attempts"
-          exit 1
+          response=$(curl -fsS --retry 3 --retry-delay 5 \
+            -X POST "$RENDER_URL/api/video/generate/async" \
+            -H "Content-Type: application/json" \
+            --data "$payload")
+          echo "$response"
+          task_id=$(echo "$response" | jq -r '.task_id')
+          test "$task_id" != "null" && test -n "$task_id"
+          echo "task_id=$task_id" >> "$GITHUB_OUTPUT"
 
       - name: Wait for video
         id: wait
