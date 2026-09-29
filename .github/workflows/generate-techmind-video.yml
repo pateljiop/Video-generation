@@ -8,6 +8,7 @@ on:
     paths:
       - '.github/workflows/generate-techmind-video.yml'
       - 'scripts/generate_techmind.py'
+      - 'scripts/render_cinematic.py'
   workflow_dispatch:
 
 permissions:
@@ -32,7 +33,9 @@ jobs:
       - name: Generate cinematic TechMind Short
         run: |
           set -e
+          mkdir -p build
           xvfb-run -a blender -b --python scripts/render_cinematic.py
+          test -s build/techmind-cinematic.mp4
           python -m pip install --quiet edge-tts
           edge-tts --voice hi-IN-MadhurNeural --rate +8% --text "AI agents ab sirf chat nahi karte. Ye computer par apps khol sakte hain, web browse kar sakte hain, code likh sakte hain, aur task complete hone tak khud verify bhi kar sakte hain. TechMind — AI jo aapke computer ke saath kaam karta hai." --write-media build/voice.mp3
           ffmpeg -y -i build/techmind-cinematic.mp4 -i build/voice.mp3 -c:v copy -c:a aac -b:a 128k -shortest build/techmind-daily.mp4
@@ -41,8 +44,12 @@ jobs:
         run: |
           set -e
           test -s build/techmind-daily.mp4
-          ffprobe -v error -select_streams v:0             -show_entries stream=width,height,r_frame_rate             -of default=noprint_wrappers=1 build/techmind-daily.mp4
-          ffprobe -v error -show_entries format=duration             -of default=noprint_wrappers=1 build/techmind-daily.mp4
+          echo "VIDEO:"
+          ffprobe -v error -select_streams v:0 -show_entries stream=width,height,r_frame_rate,codec_name -of default=noprint_wrappers=1 build/techmind-daily.mp4
+          echo "AUDIO:"
+          ffprobe -v error -select_streams a:0 -show_entries stream=codec_name,sample_rate -of default=noprint_wrappers=1 build/techmind-daily.mp4
+          echo "DURATION:"
+          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 build/techmind-daily.mp4
 
       - name: Save MP4
         uses: actions/upload-artifact@v4
