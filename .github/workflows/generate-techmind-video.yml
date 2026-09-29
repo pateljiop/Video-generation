@@ -51,7 +51,8 @@ jobs:
               "mode": "generate",
               "n_scenes": 1,
               "title": "TechMind Central",
-              "frame_template": "1920x1080/image_wide_darktech.html"
+              "frame_template": "1080x1920/static_default.html",
+              "tts_workflow": "selfhost/tts_edge.json"
           }))
           PY
           )
