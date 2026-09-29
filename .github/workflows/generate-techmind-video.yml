@@ -25,6 +25,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      - name: Verify OpenRouter video models
+        env:
+          RENDER_URL: https://pixelle-video-31d7.onrender.com
+        run: |
+          set -e
+          echo "Checking OpenRouter video model capabilities..."
+          response=$(curl -fsS --retry 3 --retry-delay 3 "$RENDER_URL/api/video/openrouter/models")
+          echo "$response" | jq -r '.data[] | [.id, (.supported_parameters // [] | join(","))] | @tsv'
+          test "$(echo "$response" | jq '.data | length')" -gt 0
+
       - name: Start Render generation
         id: start
         env:
