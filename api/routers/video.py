@@ -48,6 +48,7 @@ async def generate_free_motion_video(text: str, title: str | None = None, fps: i
     out_dir.mkdir(parents=True, exist_ok=True)
     audio_path = out_dir / "voice.mp3"
     text_path = out_dir / "body.txt"
+    title_path = out_dir / "title.txt"
     video_path = out_dir / "techmind.mp4"
 
     script = text.strip()
@@ -61,13 +62,16 @@ async def generate_free_motion_video(text: str, title: str | None = None, fps: i
     body = (script.replace("\\r", "").replace("\\n", " \\n").strip())[:900]
     text_path.write_text(body, encoding="utf-8")
     title_text = (title or "TECHMIND").upper().replace(":", " - ")[:60]
+    title_path.write_text(title_text, encoding="utf-8")
+    text_file = str(text_path.resolve())
+    title_file = str(title_path.resolve())
 
     filter_graph = (
         "drawgrid=w=120:h=120:t=1:c=0x2b3954@0.22,"
         f"drawtext=fontcolor=0x67e8f9:fontsize=78:x=(w-text_w)/2:y=220:"
-        f"text='{title_text}',shadowcolor=black@0.7:shadowx=3:shadowy=3,"
+        f"textfile='{title_file}':shadowcolor=0x000000@0.7:shadowx=3:shadowy=3,"
         f"drawtext=fontcolor=white:fontsize=44:line_spacing=18:x=90:y=620:"
-        f"textfile='{text_path}',box=1:boxcolor=0x0b1220@0.82:boxborderw=38"
+        f"textfile='{text_file}':box=1:boxcolor=0x0b1220@0.82:boxborderw=38"
     )
 
     cmd = [
