@@ -20,7 +20,7 @@ from loguru import logger
 
 
 BASE_URL = "https://openrouter.ai/api/v1"
-DEFAULT_MODEL = "kwaivgi/kling-v3.0-pro:free"
+DEFAULT_MODEL = "bytedance/seedance-2.0:free"
 
 
 def _headers(api_key: str) -> dict:
