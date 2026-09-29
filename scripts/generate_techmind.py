@@ -402,6 +402,7 @@ def make_scene(i: int, scene: tuple[str, str, str, str, str], dur: float) -> Pat
 
 def main() -> None:
     global HERO
+    # Install all optional free dependencies before creating the source frame.
     run(["python", "-m", "pip", "install", "--quiet", "edge-tts", "gradio_client", "pillow"])
     # One short free AI-video hero shot; all remaining scenes stay local/free.
     HERO = generate_free_wan_hero()
